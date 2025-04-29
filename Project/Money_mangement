@@ -1,0 +1,98 @@
+import json
+import matplotlib.pyplot as plt
+
+# File to store data
+DATA_FILE = "money_manager.json"
+
+# Load data from the file
+def load_data():
+    try:
+        with open(DATA_FILE, "r") as file:
+            return json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {"balance": 0, "transactions": []}
+
+# Save data to the file
+def save_data(data):
+    with open(DATA_FILE, "w") as file:
+        json.dump(data, file, indent=4)
+
+# Add a transaction
+def add_transaction(data, amount, category, transaction_type):
+    transaction = {
+        "type": transaction_type,
+        "amount": amount,
+        "category": category,
+    }
+    if transaction_type == "income":
+        data["balance"] += amount
+    elif transaction_type == "expense":
+        data["balance"] -= amount
+    data["transactions"].append(transaction)
+    save_data(data)
+
+# View transactions
+def view_transactions(data):
+    print("\n--- Transaction History ---")
+    for idx, t in enumerate(data["transactions"], 1):
+        print(f"{idx}. {t['type'].capitalize()} - ${t['amount']} ({t['category']})")
+    print(f"\nCurrent Balance: ${data['balance']}\n")
+
+# Visualize transactions as a bar graph
+def visualize_transactions(data):
+    if not data["transactions"]:
+        print("No transactions to visualize.")
+        return
+    
+    # Separate income and expense transactions
+    income = [t["amount"] for t in data["transactions"] if t["type"] == "income"]
+    expenses = [t["amount"] for t in data["transactions"] if t["type"] == "expense"]
+    
+    # Create categories for visualization
+    categories = ["Income", "Expenses"]
+    values = [sum(income), sum(expenses)]
+
+    # Create a bar chart
+    plt.bar(categories, values, color=["green", "red"])
+    plt.xlabel("Transaction Type")
+    plt.ylabel("Amount ($)")
+    plt.title("Income vs. Expenses")
+    plt.show()
+
+# Main program
+def main():
+    print("Welcome to the Money Manager App")
+    data = load_data()
+
+    while True:
+        print("\nChoose an option:")
+        print("1. Add Income")
+        print("2. Add Expense")
+        print("3. View Transactions")
+        print("4. Visualize Transactions")
+        print("5. Exit")
+
+        choice = input("Enter your choice: ")
+
+        if choice == "1":
+            amount = float(input("Enter income amount: "))
+            category = input("Enter income category: ")
+            add_transaction(data, amount, category, "income")
+            print("Income added successfully!")
+        elif choice == "2":
+            amount = float(input("Enter expense amount: "))
+            category = input("Enter expense category: ")
+            add_transaction(data, amount, category, "expense")
+            print("Expense added successfully!")
+        elif choice == "3":
+            view_transactions(data)
+        elif choice == "4":
+            visualize_transactions(data)
+        elif choice == "5":
+            print("Goodbye!")
+            break
+        else:
+            print("Invalid choice. Please try again.")
+
+if __name__ == "__main__":
+    main()
